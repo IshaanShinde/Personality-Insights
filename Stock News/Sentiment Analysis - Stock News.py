@@ -1,3 +1,10 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# import nltk
+# nltk.download('vader_lexicon')
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
 from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 
@@ -9,9 +16,9 @@ companies = {'Amazon': 'AMZN',
              'AMD'   : 'AMD',
              'GitLab': 'GTLB'}
 
-# Fetching the table of articles for all the companies
-
+# Parsing the page to fetch table of articles for all the companies
 table_news_articles = {}
+
 for company, ticker in companies.items():
     url = url_finviz + ticker
 
@@ -26,14 +33,16 @@ for company, ticker in companies.items():
     # break the loop after the first iteration while testing to avoid spamming the website
     break
 
-# Parsing the tables fetched into a dataframe
+# extracting the required elements from the table of articles
 data = []
+
 for ticker, news_articles in table_news_articles.items():
     for row in news_articles.findAll('tr'):
         
-        title = row.a.text
+        title = row.a.text.strip()
         
-        timestamp = row.td.text.split(' ')
+        timestamp = row.td.text.strip().split(' ')
+
         if len(timestamp) == 1:
             time = timestamp[0]
         else:
@@ -42,4 +51,25 @@ for ticker, news_articles in table_news_articles.items():
 
         data.append([ticker, date, time, title])
 
-print(data)
+# converting the extracted information into a pandas dataframe
+dataframe = pd.DataFrame(data, columns = ['ticker', 'date', 'time', 'title'])
+
+# adding the compund score by title to the dataframe
+vader = SentimentIntensityAnalyzer()
+
+vader_func = lambda title: vader.polarity_scores(title)['compound']
+dataframe['compound'] = dataframe['title'].apply(vader_func)
+
+# converting the date into the correct dtype
+# dataframe['date'] = pd.to_datetime(dataframe.date).dt.date
+
+
+def test():
+    print(dataframe.head())
+    print(f'\ndatetime\n')
+    print(dataframe[['date', 'time']].head(50))
+    print(f'\ntitles\n')
+    print(dataframe['title'].head())
+    return None
+
+test()
