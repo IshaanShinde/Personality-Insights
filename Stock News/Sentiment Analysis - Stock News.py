@@ -61,13 +61,22 @@ vader_func = lambda title: vader.polarity_scores(title)['compound']
 dataframe['compound'] = dataframe['title'].apply(vader_func)
 
 # converting the date into the correct dtype
-# dataframe['date'] = pd.to_datetime(dataframe.date).dt.date
-
+def parse_date(date_string):
+    if date_string == 'Today':
+        return pd.Timestamp.today().date()
+    else:
+        try:
+            return pd.to_datetime(date_string, format = '%b-%d-%y', errors = 'coerce').date()
+        except Exception as e:
+            print(f"Error Parsing Date: '{date_string}': {e}")
+            return pd.NaT
+        
+dataframe['date'] = dataframe['date'].apply(parse_date)
 
 def test():
     print(dataframe.head())
     print(f'\ndatetime\n')
-    print(dataframe[['date', 'time']].head(50))
+    print(dataframe[['date', 'time']].head(20))
     print(f'\ntitles\n')
     print(dataframe['title'].head())
     return None
