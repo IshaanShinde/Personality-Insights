@@ -31,7 +31,7 @@ for company, ticker in companies.items():
     table_news_articles[ticker] = news_table
     
     # break the loop after the first iteration while testing to avoid spamming the website
-    break
+    # break
 
 # extracting the required elements from the table of articles
 data = []
@@ -54,11 +54,20 @@ for ticker, news_articles in table_news_articles.items():
 # converting the extracted information into a pandas dataframe
 dataframe = pd.DataFrame(data, columns = ['ticker', 'date', 'time', 'title'])
 
-# adding the compund score by title to the dataframe
+# adding the scores by title to the dataframe
 vader = SentimentIntensityAnalyzer()
 
-vader_func = lambda title: vader.polarity_scores(title)['compound']
-dataframe['compound'] = dataframe['title'].apply(vader_func)
+vader_pos = lambda title: vader.polarity_scores(title)['pos']
+dataframe['pos'] = dataframe['title'].apply(vader_pos)
+
+vader_neu = lambda title: vader.polarity_scores(title)['neu']
+dataframe['neu'] = dataframe['title'].apply(vader_neu)
+
+vader_neg = lambda title: vader.polarity_scores(title)['neg']
+dataframe['neg'] = dataframe['title'].apply(vader_neg)
+
+vader_compound = lambda title: vader.polarity_scores(title)['compound']
+dataframe['compound'] = dataframe['title'].apply(vader_compound)
 
 # converting the date into the correct dtype
 def parse_date(date_string):
@@ -73,12 +82,5 @@ def parse_date(date_string):
         
 dataframe['date'] = dataframe['date'].apply(parse_date)
 
-def test():
-    print(dataframe.head())
-    print(f'\ndatetime\n')
-    print(dataframe[['date', 'time']].head(20))
-    print(f'\ntitles\n')
-    print(dataframe['title'].head())
-    return None
-
-test()
+# saving the dataframe
+dataframe.to_csv(f'Finviz Stock News {pd.Timestamp.today().date()}.csv')
