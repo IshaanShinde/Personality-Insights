@@ -1,0 +1,8 @@
+python3 -m venv stock_news_venv
+source stock_news_venv/bin/activate
+
+which python3
+pip list
+
+pip install -r requirements.txt
+pip list
